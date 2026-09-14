@@ -1778,6 +1778,22 @@ int vc_core_get_mode_index(struct vc_cam *cam, __u8 num_lanes, __u8 format, __u8
         return -1;
 }
 
+/* Mode for the *current* state (lanes, mbus code, binning). Unlike
+ * state->mode, which is the module ROM mode index and is only assigned in
+ * vc_sen_start_stream(), this follows set_fmt immediately, so control ranges
+ * derived from it (pixel rate, blanking) are right before streaming starts. */
+vc_mode *vc_core_get_current_mode(struct vc_cam *cam)
+{
+        struct vc_state *state = &cam->state;
+        __u8 format = vc_core_mbus_code_to_format(state->format_code);
+        int index = vc_core_get_mode_index(cam, state->num_lanes, format, state->binning_mode);
+
+        if (index < 0 || index >= MAX_VC_MODES)
+                return NULL;
+        return &cam->ctrl.mode[index];
+}
+EXPORT_SYMBOL(vc_core_get_current_mode);
+
 int vc_sen_write_binning_mode_regs(struct vc_cam *cam)
 {
         struct vc_ctrl *ctrl = &cam->ctrl;
