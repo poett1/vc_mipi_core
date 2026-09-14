@@ -1155,18 +1155,23 @@ static void vc_init_ctrl_imx900(struct vc_ctrl *ctrl, struct vc_desc* desc)
         // every frame came back torn. Exposing the range lets libcamera pad HBLANK.
         // All read out          binning   hmax  hmax    hmax  vmax      vmax   vmax  blkl  blkl  retrigger
         //                          mode    min   max     def   min       max    def   max   def
-        MODE_HMAX( 0, 2, FORMAT_RAW08, 0,   571, 0xffff,  571,   99, 0xffffff, 1794,   255,  15,    563060)
-        MODE_HMAX( 1, 2, FORMAT_RAW10, 0,   700, 0xffff,  700,   99, 0xffffff, 1794,  1023,  60,    688284)
-        MODE_HMAX( 2, 2, FORMAT_RAW12, 0,   829, 0xffff,  829,   99, 0xffffff, 1794,  4095, 240,    795528)
-        MODE_HMAX( 3, 4, FORMAT_RAW08, 0,   338, 0xffff,  338,   99, 0xffffff, 1794,   255,  15,    413694)
-        MODE_HMAX( 4, 4, FORMAT_RAW10, 0,   378, 0xffff,  378,   99, 0xffffff, 1794,  1023,  60,    444204)
-        MODE_HMAX( 5, 4, FORMAT_RAW12, 0,   610, 0xffff,  610,   99, 0xffffff, 1794,  4095, 240,    727542)
-        VMAX_MARGIN(0, 1, 258, 1794)
-        VMAX_MARGIN(1, 1, 258, 1794)
-        VMAX_MARGIN(2, 1, 258, 1794)
-        VMAX_MARGIN(3, 1, 258, 1794)
-        VMAX_MARGIN(4, 1, 258, 1794)
-        VMAX_MARGIN(5, 1, 258, 1794)
+        MODE_HMAX( 0, 2, FORMAT_RAW08, 0,   571, 0xffff,  571,   99, 0xffffff, 1756,   255,  15,    563060)
+        MODE_HMAX( 1, 2, FORMAT_RAW10, 0,   700, 0xffff,  700,   99, 0xffffff, 1741,  1023,  60,    688284)
+        MODE_HMAX( 2, 2, FORMAT_RAW12, 0,   829, 0xffff,  829,   99, 0xffffff, 1673,  4095, 240,    795528)
+        MODE_HMAX( 3, 4, FORMAT_RAW08, 0,   338, 0xffff,  338,   99, 0xffffff, 1756,   255,  15,    413694)
+        MODE_HMAX( 4, 4, FORMAT_RAW10, 0,   378, 0xffff,  378,   99, 0xffffff, 1741,  1023,  60,    444204)
+        MODE_HMAX( 5, 4, FORMAT_RAW12, 0,   610, 0xffff,  610,   99, 0xffffff, 1673,  4095, 240,    727542)
+        // VMAX floor per bit depth: the sensor needs about 1.0 ms of vertical blanking, measured on
+        // a static scene against a slow-rate reference (frames truncate below 190 lines in 8-bit and
+        // 175 in 10-bit at the 5.39 us padded line). 220 / 205 / 137 are the measured edge plus one
+        // step of headroom and reproduce Sony's 125.1 fps figure (VMAX 1756 at HMAX 338). VC's single
+        // 258-line margin was conservative and cost 2 fps (8/10-bit) and 5 fps (12-bit).
+        VMAX_MARGIN(0, 1, 220, 1756)
+        VMAX_MARGIN(1, 1, 205, 1741)
+        VMAX_MARGIN(2, 1, 137, 1673)
+        VMAX_MARGIN(3, 1, 220, 1756)
+        VMAX_MARGIN(4, 1, 205, 1741)
+        VMAX_MARGIN(5, 1, 137, 1673)
 
         ctrl->flags                     = FLAG_EXPOSURE_SONY;
 
