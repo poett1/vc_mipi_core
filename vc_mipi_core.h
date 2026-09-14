@@ -361,6 +361,7 @@ __u32 vc_core_get_num_lanes(struct vc_cam *cam);
 int vc_core_set_framerate(struct vc_cam *cam, __u32 framerate);
 __u32 vc_core_get_framerate(struct vc_cam *cam);
 __u32 vc_core_get_time_per_line_ns(struct vc_cam *cam);                         // Only used by NXP driver
+vc_mode *vc_core_get_current_mode(struct vc_cam *cam);
 int vc_core_set_binning_mode(struct vc_cam *cam, int mode);
 __u64 vc_core_mdB_to_times(int mdB);                                            // Only used by NXP driver
 int vc_core_times_to_mdB(__u64 times);                                          // Only used by NXP driver
