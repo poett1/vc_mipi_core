@@ -1150,14 +1150,17 @@ static void vc_init_ctrl_imx900(struct vc_ctrl *ctrl, struct vc_desc* desc)
         FRAME(0, 0, 2048, 1536)
 
         // hmax/vmax defaults and VMAX_MARGIN derivation: internal_docs/hmax_vmax_derivations.md#imx900
-        // All read out      binning    hmax  vmax      vmax   vmax  blkl  blkl  retrigger
-        //                      mode           min       max    def   max   def
-        MODE( 0, 2, FORMAT_RAW08, 0,     571,   99, 0xffffff, 1794,   255,  15,    563060)
-        MODE( 1, 2, FORMAT_RAW10, 0,     700,   99, 0xffffff, 1794,  1023,  60,    688284)
-        MODE( 2, 2, FORMAT_RAW12, 0,     829,   99, 0xffffff, 1794,  4095, 240,    795528)
-        MODE( 3, 4, FORMAT_RAW08, 0,     338,   99, 0xffffff, 1794,   255,  15,    413694)
-        MODE( 4, 4, FORMAT_RAW10, 0,     378,   99, 0xffffff, 1794,  1023,  60,    444204)
-        MODE( 5, 4, FORMAT_RAW12, 0,     610,   99, 0xffffff, 1794,  4095, 240,    727542)
+        // HMAX is writable (MODE_HMAX): the fixed 8/10-bit values put the line rate at
+        // 450/400 Mpix/s, above the 380 Mpix/s the Raspberry Pi 5 front end can take, and
+        // every frame came back torn. Exposing the range lets libcamera pad HBLANK.
+        // All read out          binning   hmax  hmax    hmax  vmax      vmax   vmax  blkl  blkl  retrigger
+        //                          mode    min   max     def   min       max    def   max   def
+        MODE_HMAX( 0, 2, FORMAT_RAW08, 0,   571, 0xffff,  571,   99, 0xffffff, 1794,   255,  15,    563060)
+        MODE_HMAX( 1, 2, FORMAT_RAW10, 0,   700, 0xffff,  700,   99, 0xffffff, 1794,  1023,  60,    688284)
+        MODE_HMAX( 2, 2, FORMAT_RAW12, 0,   829, 0xffff,  829,   99, 0xffffff, 1794,  4095, 240,    795528)
+        MODE_HMAX( 3, 4, FORMAT_RAW08, 0,   338, 0xffff,  338,   99, 0xffffff, 1794,   255,  15,    413694)
+        MODE_HMAX( 4, 4, FORMAT_RAW10, 0,   378, 0xffff,  378,   99, 0xffffff, 1794,  1023,  60,    444204)
+        MODE_HMAX( 5, 4, FORMAT_RAW12, 0,   610, 0xffff,  610,   99, 0xffffff, 1794,  4095, 240,    727542)
         VMAX_MARGIN(0, 1, 258, 1794)
         VMAX_MARGIN(1, 1, 258, 1794)
         VMAX_MARGIN(2, 1, 258, 1794)

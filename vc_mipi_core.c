@@ -2224,7 +2224,10 @@ static __u32 vc_core_calculate_period_1H(struct vc_cam *cam, __u8 num_lanes, __u
         for (index = 0; index <= MAX_VC_MODES; index++) {
                 struct vc_mode *mode = &ctrl->mode[index];
                 if (mode->num_lanes == num_lanes && mode->format == format && (binning_index == ctrl->mode[index].binning)) {
-                        return ((__u64)mode->hmax.def * 1000000000) / ctrl->clk_pixel;
+                        /* Honour an HMAX overwrite (V4L2_CID_HBLANK): the exposure
+                         * line count is converted with the line time the sensor is
+                         * actually running, not the mode default. */
+                        return ((__u64)vc_core_get_hmax(cam, num_lanes, format, binning) * 1000000000) / ctrl->clk_pixel;
                 }
         }
 
