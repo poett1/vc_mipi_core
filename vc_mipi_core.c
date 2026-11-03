@@ -2102,6 +2102,8 @@ int vc_sen_set_gain(struct vc_cam *cam, __u64 gain, bool unit_is_mdB)
         vc_notice(dev, "%s(): Set sensor gain: %u mdB (exposure: %u us)\n", __FUNCTION__, 
                 gain_mdB, cam->state.exposure);
 
+        // Kept even if the write fails, for the same reason as in vc_sen_set_exposure().
+        cam->state.gain = gain_mdB;
         ret |= i2c_write_reg2(dev, client, &ctrl->csr.sen.again, again, __FUNCTION__);
         ret |= i2c_write_reg2(dev, client, &ctrl->csr.sen.dgain, dgain, __FUNCTION__);
         if (ret) {
@@ -2109,7 +2111,6 @@ int vc_sen_set_gain(struct vc_cam *cam, __u64 gain, bool unit_is_mdB)
                 return ret;
         }
 
-        cam->state.gain = gain_mdB;
         return 0;
 }
 EXPORT_SYMBOL(vc_sen_set_gain);
@@ -2169,7 +2170,16 @@ int vc_sen_start_stream(struct vc_cam *cam)
                 vc_sen_stop_stream(cam);
         }
 
-        if ((ctrl->flags & FLAG_EXPOSURE_SONY || ctrl->flags & FLAG_EXPOSURE_NORMAL) || 
+        // After a module reset the sensor holds its defaults. Written only after the switch
+        // to operating mode below, gain and exposure take effect from the second frame, so
+        // the first frame after boot was exposed for the whole frame. Write them while still
+        // in standby as well; the writes below stay as they were.
+        if (reset && (ctrl->flags & FLAG_EXPOSURE_SONY)) {
+                vc_sen_set_gain(cam, cam->state.gain, true);
+                vc_sen_set_exposure(cam, cam->state.exposure);
+        }
+
+        if ((ctrl->flags & FLAG_EXPOSURE_SONY || ctrl->flags & FLAG_EXPOSURE_NORMAL) ||
             (ctrl->flags & FLAG_EXPOSURE_OMNIVISION && !vc_mod_is_trigger_enabled(cam))) {
         ret |= vc_sen_write_mode(ctrl, ctrl->csr.sen.mode_operating);
         if (ret)
@@ -2666,8 +2676,14 @@ int vc_sen_set_exposure(struct vc_cam *cam, int exposure_us)
                 }
         }
 
-        if (ret == 0) {
-                cam->state.exposure = exposure_us;
+        // Keep the request even if the sensor did not take it: until the first stream start
+        // powers it up, it NACKs every write. Stream start applies state.exposure, and V4L2
+        // never passes an unchanged control value again, so dropping it here left the
+        // first stream after boot at the default exposure.
+        cam->state.exposure = exposure_us;
+        if (ret) {
+                vc_warn(dev, "%s(): Sensor did not take exposure %u us (error: %d), applying it at stream start\n",
+                        __FUNCTION__, exposure_us, ret);
         }
 
         vc_dbg(dev, "%s(): (VMAX: %5u, SHS: %5u), (RETC: %6u, EXPC: %6u)\n",
